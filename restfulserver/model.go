@@ -38,7 +38,6 @@ func pipelineSchema(pipeline *client.Schema) {
 	pipelineName.Required = true
 	pipelineName.Unique = true
 	pipeline.ResourceFields["name"] = pipelineName
-
 	pipelineRepository := pipeline.ResourceFields["repository"]
 	pipelineRepository.Create = true
 	pipelineRepository.Required = true
@@ -53,6 +52,19 @@ func pipelineSchema(pipeline *client.Schema) {
 	pipeline.ResourceActions = map[string]client.Action{
 		"run": client.Action{
 			Output: "activity",
+		},
+		"update": client.Action{
+			Output: "pipeline",
+		},
+		"activate": client.Action{
+			Output: "pipeline",
+		},
+		"deactivate": client.Action{
+			Output: "pipeline",
+		},
+
+		"remove": client.Action{
+			Output: "pipeline",
 		},
 	}
 
@@ -75,12 +87,17 @@ func toPipelineCollections(apiContext *api.ApiContext, pipelines []*pipeline.Pip
 
 func toPipelineResource(apiContext *api.ApiContext, pipeline *pipeline.Pipeline) *pipeline.Pipeline {
 	pipeline.Resource = client.Resource{
-		Id:      pipeline.Name,
+		Id:      pipeline.Id,
 		Type:    "pipeline",
 		Actions: map[string]string{},
 		Links:   map[string]string{},
 	}
 	pipeline.Actions["run"] = apiContext.UrlBuilder.ReferenceLink(pipeline.Resource) + "?action=run"
+	pipeline.Actions["update"] = apiContext.UrlBuilder.ReferenceLink(pipeline.Resource) + "?action=update"
+	pipeline.Actions["remove"] = apiContext.UrlBuilder.ReferenceLink(pipeline.Resource) + "?action=remove"
+	pipeline.Actions["activate"] = apiContext.UrlBuilder.ReferenceLink(pipeline.Resource) + "?action=activate"
+	pipeline.Actions["deactivate"] = apiContext.UrlBuilder.ReferenceLink(pipeline.Resource) + "?action=deactivate"
+
 	pipeline.Links["activitys"] = apiContext.UrlBuilder.Link(pipeline.Resource, "activitys")
 	return pipeline
 }
@@ -92,6 +109,9 @@ func toActivityResource(apiContext *api.ApiContext, a *pipeline.Activity) *pipel
 		Actions: map[string]string{},
 		Links:   map[string]string{},
 	}
+	a.Actions["update"] = apiContext.UrlBuilder.ReferenceLink(a.Resource) + "?action=update"
+	a.Actions["remove"] = apiContext.UrlBuilder.ReferenceLink(a.Resource) + "?action=remove"
+
 	a.Links["pipeline"] = apiContext.UrlBuilder.ReferenceByIdLink("pipeline", a.PipelineName+":"+a.PipelineVersion)
 	return a
 }
